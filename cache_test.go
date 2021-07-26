@@ -1,10 +1,10 @@
 package sample1
 
 import (
-	"testing"
-	"time"
 	"fmt"
 	"sort"
+	"testing"
+	"time"
 )
 
 // mockResult has the float64 and err to return
@@ -130,7 +130,7 @@ func TestGetPriceFor_DoesNotReturnOldResults(t *testing.T) {
 		},
 	}
 	maxAge := time.Millisecond * 200
-	maxAge70Pct := time.Millisecond * 140
+	maxAge70Pct := time.Millisecond * 70
 	cache := NewTransparentCache(mockService, maxAge)
 	// get price for "p1" twice (one external service call)
 	assertFloat(t, 5, getPriceWithNoErr(t, cache, "p1"), "wrong price returned")
@@ -138,6 +138,7 @@ func TestGetPriceFor_DoesNotReturnOldResults(t *testing.T) {
 	assertInt(t, 1, mockService.getNumCalls(), "wrong number of service calls")
 	// sleep 0.7 the maxAge
 	time.Sleep(maxAge70Pct)
+
 	// get price for "p1" and "p2", only "p2" should be retrieved from the external service (one more external call)
 	assertFloat(t, 5, getPriceWithNoErr(t, cache, "p1"), "wrong price returned")
 	assertFloat(t, 5, getPriceWithNoErr(t, cache, "p1"), "wrong price returned")
@@ -145,12 +146,13 @@ func TestGetPriceFor_DoesNotReturnOldResults(t *testing.T) {
 	assertFloat(t, 7, getPriceWithNoErr(t, cache, "p2"), "wrong price returned")
 	assertInt(t, 2, mockService.getNumCalls(), "wrong number of service calls")
 	// sleep 0.7 the maxAge
+
 	time.Sleep(maxAge70Pct)
 	// get price for "p1" and "p2", only "p1" should be retrieved from the cache ("p2" is still valid)
 	assertFloat(t, 5, getPriceWithNoErr(t, cache, "p1"), "wrong price returned")
 	assertFloat(t, 5, getPriceWithNoErr(t, cache, "p1"), "wrong price returned")
 	assertFloat(t, 7, getPriceWithNoErr(t, cache, "p2"), "wrong price returned")
-	assertInt(t, 3, mockService.getNumCalls(), "wrong number of service calls")
+	assertInt(t, 2, mockService.getNumCalls(), "wrong number of service calls")
 }
 
 // Check that cache parallelize service calls when getting several values at once
