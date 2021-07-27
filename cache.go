@@ -33,15 +33,14 @@ func NewTransparentCache(actualPriceService PriceService, maxAge time.Duration) 
 
 // GetPriceFor gets the price for the item, either from the cache or the actual service if it was not cached or too old
 func (c *TransparentCache) GetPriceFor(itemCode string) (float64, error) {
-	get := true
+	getService := true
 	price, ok := c.prices[itemCode]
 	if ok {
-		// TODO: check that the price was retrieved less than "maxAge" ago!
-		m := c.maxAge
-		maxtimecache := c.time.Add(m)
-		get = maxtimecache.Before(time.Now())
+		maxAge := c.maxAge
+		maxtimecache := c.time.Add(maxAge)
+		getService = maxtimecache.Before(time.Now())
 	}
-	if get {
+	if getService {
 		price, err := c.actualPriceService.GetPriceFor(itemCode)
 		if err != nil {
 			return 0, fmt.Errorf("getting price from service : %v", err.Error())
@@ -59,7 +58,6 @@ func (c *TransparentCache) GetPricesFor(itemCodes ...string) ([]float64, error) 
 	var wg sync.WaitGroup
 	wg.Add(len(itemCodes))
 	for i, itemCode := range itemCodes {
-		// TODO: parallelize this, it can be optimized to not make the calls to the external service sequentially
 		go func(i int, itemCode string) {
 			defer wg.Done()
 			price, err := c.GetPriceFor(itemCode)
